@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿// Firestorm Game Engine MeshUtil  Copyright 2022 TECHNICAL ARTS h.godai
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.Rendering;
@@ -6,6 +7,7 @@ using System.Linq;
 
 namespace FireStorm
 {
+    // UnityのMeshを管理するクラス
     class MeshElements
     {
         public List<int> Triangles = new List<int>();
@@ -14,7 +16,6 @@ namespace FireStorm
         public List<Vector2> Uv2 = new List<Vector2>();
         public List<Vector3> Normals = new List<Vector3>();
         public List<Vector4> Tangents = new List<Vector4>();
-
 
         public int VtxCount => this.Vertices.Count;
 
@@ -88,6 +89,7 @@ namespace FireStorm
 
     }
 
+    // Mesh操作のツール
     public class MeshUtil
     {
         private const int MaxMeshCount = 256;
@@ -121,6 +123,7 @@ namespace FireStorm
 
         }
 
+        // occlusionAreaから裏面になるポリゴンを分離する
         public (Mesh front, Mesh back) CullingMesh(Mesh sourceMesh, Transform meshTransform, OcclusionArea occlusionArea)
         {
             var max = occlusionArea.center + (occlusionArea.size * 0.5f);
@@ -144,8 +147,7 @@ namespace FireStorm
             return (result[0], result[1]);
         }
 
-
-
+        // Meshをスキャンして操作を行う
         public Mesh[] MeshScan(Mesh sourceMesh, int outMeshCount, System.Func<Vector3, Vector3, Vector3, int> check)
         {
             MeshElements src = new MeshElements(sourceMesh);
@@ -176,6 +178,7 @@ namespace FireStorm
             return newMesh.Select((m, i) => m.CreateMesh($"{sourceMesh.name}_{i}")).ToArray();
         }
 
+        // Transfromの計算 Matrix使うより高速かも
         private Vector3 trans(Transform meshTransform, ref Vector3 v)
         {
             v.x = v.x * meshTransform.localScale.x;
@@ -198,9 +201,5 @@ namespace FireStorm
             return false;
         }
 
-
-
-
     }
-
 }
