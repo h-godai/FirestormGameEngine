@@ -12,6 +12,7 @@ using System.Linq;
 
 namespace FireStorm
 {
+    [ExecuteInEditMode]
     public class MeshCombiner : MonoBehaviour
     {
         [Tooltip("メッシュを生成する場所を指定します。")]
@@ -126,7 +127,8 @@ namespace FireStorm
             // 結合前のメッシュのリストを生成
             var meshFilters = this.OriginalObject.GetComponentsInChildren<MeshFilter>(true);
             var mashesByMaterials = new Dictionary<Material, (GameObject gobj, List<CombineInstance> comblines)>();
-            
+            Debug.Log($"{meshFilters.Length} meshes detected.");
+
             this.MeshUtil.ResetCount();
 
             // Material毎に、CombineInstanceのリストを作る
@@ -273,6 +275,14 @@ namespace FireStorm
 
             Debug.Log($"Original {this.MeshUtil.TotalMeshCount[0] + this.MeshUtil.TotalMeshCount[1]} Vertices. New Vertices: {this.MeshUtil.TotalMeshCount[0]}, Culled:{this.MeshUtil.TotalMeshCount[1]}:");
 
+            // RefrectionProbeを複製する
+            foreach(var probe in this.OriginalObject.GetComponentsInChildren<ReflectionProbe>())
+            {
+                var obj = Instantiate(probe);
+                obj.transform.SetParent(this.generatedObject.transform);
+                obj.transform.position = probe.transform.position;
+            }
+
             EditorUtility.SetDirty(this.generatedObject);
             this.generatedObject.SetActive(true);
             this.OriginalObject.SetActive(false);
@@ -314,7 +324,38 @@ namespace FireStorm
             return mesh;
         }
 
+        private void Update()
+        {
+            DrawArea();
+        }
 
+        public void DrawArea()
+        {
+            if (this.Areas == null) return;
+            var col = Color.red;
+            foreach (var area in this.Areas)
+            {
+                var szH = area.AreaSize; szH.y = 0;
+                var hy = area.CenterPos.y + area.AreaSize.y * 0.5f;
+                var ly = hy - area.AreaSize.y;
+                var p1 = area.CenterPos - szH * 0.5f; p1.y = hy;
+                var p2 = p1; p2.x += szH.x;
+                var p3 = p1; p3 += szH;
+                var p4 = p1; p4.z += szH.z;
+                var p5 = p1; p5.y = ly;
+                var p6 = p2; p6.y = ly;
+                var p7 = p3; p7.y = ly;
+                var p8 = p4; p8.y = ly;
+                Debug.DrawLine(p1, p2, col);
+                Debug.DrawLine(p2, p3, col);
+                Debug.DrawLine(p3, p4, col);
+                Debug.DrawLine(p4, p1, col);
+                Debug.DrawLine(p1, p5, col);
+                Debug.DrawLine(p2, p6, col);
+                Debug.DrawLine(p3, p7, col);
+                Debug.DrawLine(p4, p8, col);
+            }
+        }
 
 
     } // class MeshCombiner
@@ -351,6 +392,7 @@ namespace FireStorm
                     self.OcclusionArea = ocarea.GetComponent<OcclusionArea>();
                 }
             }
+            self.DrawArea();
 
         }
     } // class
